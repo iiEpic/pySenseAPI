@@ -1,0 +1,5 @@
+{
+    "backup": "diag_backup.php",
+    "interface": "status_interfaces.php",
+    "logout": "index.php?logout"
+}
