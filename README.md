@@ -57,15 +57,41 @@ pip install -r requirements.txt
 
 ### Usage
 
+#### Option one
 ```python
-from pfsenseapi import pfSense
+from pfsenseapi.pfsense import pfSense
+from dotenv import load_dotenv
 
-# Initialize the pfSense instance
-pfsense = pfSense(host="10.0.0.1", username="CORE_USERNAME", password="CORE_PASSWORD")
+load_dotenv()
 
-# Retrieve interfaces
-interfaces = pfsense.get_interfaces()
-print(interfaces)
+host = {
+    'name': 'Main pfSense Box',
+    'ip_address': '10.0.0.1',
+    'username': 'CORE_USERNAME',
+    'password': 'CORE_PASSWORD'
+}
+
+pfsense = pfSense(host)
+pfsense.login()
+
+print(pfsense.get_status())
+
+pfsense.disconnect()
+```
+
+#### Option Two
+```python
+from pfsenseapi.pfsense import load_hosts
+from dotenv import load_dotenv
+
+load_dotenv()
+hosts = load_hosts()
+
+for host in hosts:
+    print(host.get_status())
+
+    # Close my connection to pfSense
+    host.disconnect()
 ```
 
 ### Command-Line Interface (CLI)

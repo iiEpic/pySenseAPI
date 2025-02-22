@@ -21,17 +21,7 @@ def check_env(args):
 def list_hosts():
     print("Loaded Hosts:")
     for host in hosts:
-        print(f"- {host.name} ({host.ip_address})")
-        try:
-            if host.connection:
-                print(f"  Version: {host.version}")
-                print("  Status: Connected")
-            else:
-                host.login()
-                print(f"  Version: {host.version}")
-                print("  Status: Connected")
-        except Exception as e:
-            print(f"  Status: Connection Failed - {str(e)}")
+        host.get_status()
 
 
 def list_interfaces(hostname):
@@ -61,17 +51,7 @@ def test_connection(hostname):
     host = [host for host in hosts if host.name.lower() == hostname.lower()] or None
     if host:
         host = host[0]
-        print(f"- {host.name} ({host.ip_address})")
-        if host.connection is None:
-            host.login()
-            if host.connection:
-                print(f"  Version: {host.version}")
-                print("  Status: Connected")
-            else:
-                print('  Could not connect to', host.name)
-        else:
-            print(f"  Version: {host.version}")
-            print("  Status: Connected")
+        host.get_status()
     else:
         print('Could not find host with name:', hostname)
 
