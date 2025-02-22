@@ -1,4 +1,5 @@
 import html
+import json
 import os
 import re
 from datetime import datetime, UTC
@@ -11,26 +12,59 @@ class WebConnection:
         if self.pfsense.autoconnect:
             self.login()
 
-    def login(self):
-        response = self.pfsense._web_get_response(self.pfsense.base_url)
-        csrf_token = get_csrf_token(response)
-        data = {
-            'login': 'Login',
-            'usernamefld': os.getenv(self.pfsense.username),
-            'passwordfld': os.getenv(self.pfsense.password),
-            '__csrf_magic': csrf_token
-        }
-        response = self.pfsense._web_post_response(self.pfsense.base_url, data)
-
+    def create_vlan(self, data):
+        print(f'Creating vlan [{self.pfsense.name}]...')
+        url = self.pfsense.base_url + self.pfsense.endpoints.get('edit_vlan')
+        response = self.pfsense._web_get_response(url)
         if response is None:
-            print('Failed to login', self.pfsense.base_url)
+            print('Failed to get webpage', url)
             return None
 
-    def get_interfaces(self):
-        response = self.pfsense._web_get_response(self.pfsense.base_url + self.pfsense.endpoints.get('interface'))
-        response_content = response.content.decode()  # Assuming response.content is bytes
-        interfaces = self._web_parse_interface_panels(response_content)
-        return interfaces
+        csrf_token = get_csrf_token(response)
+        if csrf_token is None:
+            print('Could not get CSRF Token', response.text)
+            return None
+
+        data['__csrf_magic'] = csrf_token
+        response = self.pfsense._web_post_response(url, data)
+        if response is None:
+            print('Failed to post to webpage', url)
+            return None
+        else:
+            print(f'Created VLAN {data["tag"]} on {self.pfsense.name}')
+
+    def delete_vlan(self, data):
+        print(f'Deleting vlan [{self.pfsense.name}]...')
+        url = self.pfsense.base_url + self.pfsense.endpoints.get('vlan')
+        response = self.pfsense._web_get_response(url)
+        if response is None:
+            print('Failed to get webpage', url)
+            return None
+
+        csrf_token = get_csrf_token(response)
+        if csrf_token is None:
+            print('Could not get CSRF Token', response.text)
+            return None
+
+        data['__csrf_magic'] = csrf_token
+        vlan = data['tag']
+        data.pop('tag')
+        response = self.pfsense._web_post_response(url, data)
+        if response is None:
+            print('Failed to post to webpage', url)
+            return None
+        else:
+            print(f'Deleted VLAN {vlan} on {self.pfsense.name}')
+
+    def disconnect(self):
+        response = self.pfsense._web_get_response(self.pfsense.base_url + self.pfsense.endpoints.get('logout'))
+        csrf_token = get_csrf_token(response)
+        data = {
+            'logout': '',
+            '__csrf_magic': csrf_token
+        }
+        self.pfsense._web_post_response(self.pfsense.base_url + self.pfsense.endpoints.get('logout'), data)
+        self.pfsense.connection = None
 
     def get_backup(self, file_path=None):
         print(f'Gathering backup from [{self.pfsense.name}]...')
@@ -67,15 +101,76 @@ class WebConnection:
 
             print('Backed up config.xml to', file_path)
 
-    def disconnect(self):
-        response = self.pfsense._web_get_response(self.pfsense.base_url + self.pfsense.endpoints.get('logout'))
+    def get_interfaces(self):
+        response = self.pfsense._web_get_response(self.pfsense.base_url + self.pfsense.endpoints.get('interface'))
+        response_content = response.content.decode()  # Assuming response.content is bytes
+        interfaces = self._web_parse_interface_panels(response_content)
+        return interfaces
+
+    def get_vlans(self):
+        print(f'Getting VLANs on [{self.pfsense.name}]...')
+        url = self.pfsense.base_url + self.pfsense.endpoints.get('vlan')
+        response = self.pfsense._web_get_response(url)
+        if response is None:
+            print('Failed to get webpage', url)
+            return None
+
+        pattern = r'(?s)<table class="table.*>(.*?)<\/table>'
+        table = re.search(pattern, response.content.decode()).group(0)
+        table_headers = re.findall('<th>(.*?)</th>', table)
+        table_items = re.findall('(?s)<td>(.*?)</td>', table)
+
+        # Change the last header to ID instead of Actions
+        table_headers[-1] = 'ID'
+
+        # Clean up the output
+        table_items = [i.strip() for i in table_items]
+
+        # Get the ID of the item
+        ids = [re.search(r'id="del-(\d+)">', i).group(1) for i in table_items if re.search('id="(.*?)">', i)]
+        vlans = []
+        for pos, i in enumerate(range(0, len(table_items), 5)):
+            table_item = table_items[i:i + 5]
+            table_item[-1] = ids[pos]  # Replace the last item with the ID
+            vlan_dict = dict(zip([header.lower().replace(' ', '_') for header in table_headers], table_item))
+            vlans.append(vlan_dict)
+        return json.dumps(vlans, indent=2)
+
+    def login(self):
+        response = self.pfsense._web_get_response(self.pfsense.base_url)
         csrf_token = get_csrf_token(response)
         data = {
-            'logout': '',
+            'login': 'Login',
+            'usernamefld': os.getenv(self.pfsense.username),
+            'passwordfld': os.getenv(self.pfsense.password),
             '__csrf_magic': csrf_token
         }
-        self.pfsense._web_post_response(self.pfsense.base_url + self.pfsense.endpoints.get('logout'), data)
-        self.pfsense.connection = None
+        response = self.pfsense._web_post_response(self.pfsense.base_url, data)
+
+        if response is None:
+            print('Failed to login', self.pfsense.base_url)
+            return None
+
+    def update_vlan(self, data):
+        print(f'Updating VLAN on [{self.pfsense.name}]...')
+        url = self.pfsense.base_url + self.pfsense.endpoints.get('edit_vlan')
+        response = self.pfsense._web_get_response(url, )
+        if response is None:
+            print('Failed to get webpage', url, {'id': data['id']})
+            return None
+
+        csrf_token = get_csrf_token(response)
+        if csrf_token is None:
+            print('Could not get CSRF Token', response.text)
+            return None
+
+        data['__csrf_magic'] = csrf_token
+        response = self.pfsense._web_post_response(url, params={'id': data['id']}, data=data)
+        if response is None:
+            print('Failed to post to webpage', url)
+            return None
+        else:
+            print(f'Updated VLAN {data["tag"]} on {self.pfsense.name}')
 
     def _web_parse_interface_panels(self, response_content):
         # Capture each panel block including its heading and body

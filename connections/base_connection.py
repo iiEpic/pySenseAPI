@@ -40,10 +40,18 @@ class BaseConnection:
         }
         self.connection = ConnectHandler(**device)
 
-    def _web_get_response(self, url, headers=None):  # Keep for internal use in web_connection.py
+    def _web_get_response(self, url, headers=None, params=None):  # Keep for internal use in web_connection.py
+        if params:
+            url += '?'
+            for key, value in params.items():
+                url += f'&{key}={value}'
         response = self.session.get(url=url, headers=headers)
         return response
 
-    def _web_post_response(self, url, data, headers=None):  # Keep for internal use in web_connection.py
+    def _web_post_response(self, url, data, headers=None, params=None):  # Keep for internal use in web_connection.py
+        if params:
+            url += '?'
+            for key, value in params.items():
+                url += f'&{key}={value}'
         response = self.session.post(url=url, data=data, headers=headers)
         return response
