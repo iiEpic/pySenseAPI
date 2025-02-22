@@ -25,10 +25,11 @@ git clone https://github.com/iiEpic/pySenseAPI.git
 cd pySenseAPI
 ```
 
-Install the required dependencies:
+Create virtual enviornment and Install the required dependencies:
 
 ```bash
-pip install -r requirements.txt
+python3 -m venv even/ && source venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
 ### Configuration
