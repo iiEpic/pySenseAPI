@@ -1,0 +1,7 @@
+{
+    "backup": "diag_backup.php",
+    "edit_vlan": "interfaces_vlan_edit.php",
+    "interface": "status_interfaces.php",
+    "logout": "index.php?logout",
+    "vlan": "interfaces_vlan.php"
+}

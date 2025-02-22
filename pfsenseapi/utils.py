@@ -1,5 +1,3 @@
-import json
-import os
 import re
 
 
@@ -45,10 +43,3 @@ def hex_to_dotted_decimal(hex_string):
     octet4 = decimal_value & 255
 
     return f"{octet1}.{octet2}.{octet3}.{octet4}"
-
-
-def load_hosts(filename='hosts.json'):
-    """Load hosts from JSON"""
-    with open(filename, 'r') as file:
-        hosts_data = json.load(file)
-    return hosts_data
