@@ -28,7 +28,7 @@ cd pySenseAPI
 Create virtual enviornment and Install the required dependencies:
 
 ```bash
-python3 -m venv even/ && source venv/bin/activate
+python3 -m venv venv/ && source venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
