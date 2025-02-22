@@ -6,7 +6,7 @@ hosts = load_hosts()
 
 for host in hosts:
     # Get all VLANS as a dict
-    print(host.get_vlans())
+    # print(host.get_vlans())
 
     # Create a new VLAN
     # data = {
