@@ -60,6 +60,9 @@ pip install -r requirements.txt
 #### Option one
 ```python
 from pfsenseapi import pfSense
+from dotenv import load_dotenv
+
+load_dotenv()
 
 pfsense = pfSense(name="Main pfSense Box", ip_address="10.0.0.1", username="CORE_USERNAME", password="CORE_PASSWORD")
 pfsense.login()
