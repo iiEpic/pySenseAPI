@@ -5,7 +5,7 @@ import re
 import requests
 import urllib3
 from datetime import datetime, UTC
-from .utils import get_csrf_token
+from pfsenseapi.utils import get_csrf_token
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -31,6 +31,7 @@ class pfSense:
             self.endpoints = json.load(f)
         self.session = requests.session()
         self.session.verify = False
+        self.version = None
         if self.autoconnect:
             self.login()
 
@@ -172,6 +173,13 @@ class pfSense:
         if response is None:
             print('Failed to login', self.base_url)
             return None
+
+        response = self._web_get_response(self.base_url)
+        version = re.search(r'(?s)<th>Version</th>.*?<td>.*?<strong>(.*?)</strong>', response.content.decode())
+
+        if version:
+            self.version = version.group(1)
+        self.connection = True
 
     def update_vlan(self, data):
         print(f'Updating VLAN on [{self.name}]...')
