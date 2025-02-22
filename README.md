@@ -59,25 +59,22 @@ pip install -r requirements.txt
 
 #### Option one
 ```python
-from pfsenseapi import pfSense
+from pfsenseapi.pfsense import pfSense
 from dotenv import load_dotenv
 
 load_dotenv()
 
-pfsense = pfSense(name="Main pfSense Box", ip_address="10.0.0.1", username="CORE_USERNAME", password="CORE_PASSWORD")
+host = {
+    'name': 'Main pfSense Box',
+    'ip_address': '10.0.0.1',
+    'username': 'CORE_USERNAME',
+    'password': 'CORE_PASSWORD'
+}
+
+pfsense = pfSense(host)
 pfsense.login()
 
-print(f"- {pfsense.name} ({pfsense.ip_address})")
-   try:
-      if pfsense.connection:
-          print(f"  Version: {pfsense.version}")
-          print("  Status: Connected")
-      else:
-          pfsense.login()
-          print(f"  Version: {pfsense.version}")
-          print("  Status: Connected")
-   except Exception as e:
-      print(f"  Status: Connection Failed - {str(e)}")
+print(pfsense.get_status())
 
 pfsense.disconnect()
 ```
@@ -91,17 +88,7 @@ load_dotenv()
 hosts = load_hosts()
 
 for host in hosts:
-    print(f"- {host.name} ({host.ip_address})")
-        try:
-            if host.connection:
-                print(f"  Version: {host.version}")
-                print("  Status: Connected")
-            else:
-                host.login()
-                print(f"  Version: {host.version}")
-                print("  Status: Connected")
-        except Exception as e:
-            print(f"  Status: Connection Failed - {str(e)}")
+    print(host.get_status())
 
     # Close my connection to pfSense
     host.disconnect()

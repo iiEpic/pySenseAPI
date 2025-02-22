@@ -10,7 +10,9 @@ from pfsenseapi.utils import get_csrf_token
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def load_hosts(filename='hosts.json'):
+def load_hosts(filename=None):
+    if filename is None:
+        filename = os.path.join(os.getcwd(), 'hosts.json')
     """Load hosts from JSON"""
     with open(filename, 'r') as file:
         hosts_data = json.load(file)
@@ -23,8 +25,8 @@ class pfSense:
         self.ip_address = host['ip_address']
         self.username = host['username']
         self.password = host['password']
-        self.port = host['port']
-        self.autoconnect = host['autoconnect']
+        self.port = host['port'] if 'port' in host else '443'
+        self.autoconnect = host['autoconnect'] if 'autoconnect' in host else False
         self.connection = None
         self.base_url = f"https://{self.ip_address}:{self.port}/"
         with open(os.path.join(os.sep, *os.path.abspath(__file__).split('/')[:-1], 'endpoints.json'), 'r') as f:
@@ -129,6 +131,21 @@ class pfSense:
         response_content = response.content.decode()  # Assuming response.content is bytes
         interfaces = self._web_parse_interface_panels(response_content)
         return interfaces
+
+    def get_status(self):
+        message = []
+        message.append(f"- {self.name} ({self.ip_address})")
+        try:
+            if self.connection:
+                message.append(f"  Version: {self.version}")
+                message.append("  Status: Connected")
+            else:
+                self.login()
+                message.append(f"  Version: {self.version}")
+                message.append("  Status: Connected")
+        except Exception as e:
+            message.append(f"  Status: Connection Failed - {str(e)}")
+        return '\n'.join(message)
 
     def get_vlans(self):
         print(f'Getting VLANs on [{self.name}]...')
