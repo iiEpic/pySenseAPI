@@ -1,0 +1,10 @@
+[
+  {
+    "name": "pfSense Core",
+    "ip_address": "10.0.0.1",
+    "username": "CORE_USERNAME",
+    "password": "CORE_PASSWORD",
+    "port": 443,
+    "autoconnect": true
+  }
+]
