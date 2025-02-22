@@ -1,16 +1,12 @@
-from utils import load_hosts
-from pfsense import pfSense
+from pfsenseapi.pfsense import load_hosts
 from dotenv import load_dotenv
 
 load_dotenv()
 hosts = load_hosts()
 
-hosts = [i for i in hosts if i['connection_method'] == 'web']
-
 for host in hosts:
-    pfsense = pfSense(host)
     # Get all VLANS as a dict
-    # print(pfsense.get_vlans())
+    print(host.get_vlans())
 
     # Create a new VLAN
     # data = {
@@ -32,13 +28,13 @@ for host in hosts:
     # Update an existing VLAN
     # data = {
     #     'if': 'em0',
-    #     'tag': '100',
-    #     'descr': 'New description for VLAN100',
-    #     'vlanif': 'em0.100',
-    #     'id': '0',
+    #     'tag': '2',
+    #     'descr': 'VLAN2',
+    #     'vlanif': 'em0.2',
+    #     'id': '2',
     #     'save': 'Save'
     # }
     # pfsense.update_vlan(data)
 
     # Close my connection to pfSense
-    pfsense.disconnect()
+    host.disconnect()
